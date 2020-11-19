@@ -1,0 +1,58 @@
+<args format="1.0" scope="/root/passes//*" nodeFlavors="_hide">
+    <group name="renderPass" open="False" hideTitle="True">
+        <int name="enablePass" label="Enable Render Pass" default="0" widget="checkBox" constant="1">
+            <help>
+                Enable the render pass for use in rendering.
+            </help>
+        </int>
+        <group name="definition" label="Definition" open="True">
+            <string name="prefix" label="Prefix" default="all" constant="1" widget="popup" options="all|char|env|fx|prop|vehicle|crowd|atmos|*">
+                <help>
+                    Set the prefix of the pass
+                </help>
+            </string>
+            <string name="label" label="Label" default="label" constant="1">
+                <help>
+                    Set the label of the pass
+                </help>
+            </string>
+            <string name="layer" label="Layer" default="L010" widget="popup" constant="1" options="L010|L020|L030|L040|L050|L060|L070|L080|L090|*">
+                <help>
+                    Set the layer of the pass
+                </help>
+            </string>
+            <string name="type" label="Type" default="beauty" constant="1" widget="popup" options="beauty|grey|shadow|test|util|additive|*">
+                <help>
+                    Set the type of the pass
+                </help>
+            </string>
+        </group>
+        <group name="visibility" label="Visibility" open="True">
+            <string name="camera_objects" label="Camera Objects" default="" widget="cel" constant="1">
+                <help>
+                    Set the objects visible in primary camera rays
+                </help>
+            </string>
+            <string name="trace_objects" label="Trace Objects" default="" widget="cel" constant="1">
+                <help>
+                    Set the objects not visible in primary camera rays
+                </help>
+            </string>
+            <string name="light_objects" label="Light Objects" default="" widget="cel" constant="1">
+                <help>
+                    Set the lights visible for the render pass
+                </help>
+            </string>
+            <string name="matte_objects" label="Matte Objects" default="" widget="cel" constant="1">
+                <help>
+                    Set the matte objects for the render pass
+                </help>
+            </string>
+            <string name="prune_objects" label="Prune Objects" default="" widget="cel" constant="1">
+                <help>
+                    Set the objects to be pruned for the render pass
+                </help>
+            </string>
+        </group>
+    </group>
+</args>
