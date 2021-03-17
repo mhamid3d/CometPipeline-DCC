@@ -4,6 +4,8 @@ import os
 
 # Configure Default Values
 nuke.knobDefault("Root.colorManagement", "OCIO")
+nuke.knobDefault("Root.lock_range", "1")
+
 
 def resolution_and_range_startup():
     handler = mongorm.getHandler()

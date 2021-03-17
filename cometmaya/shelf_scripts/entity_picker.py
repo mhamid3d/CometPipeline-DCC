@@ -11,16 +11,19 @@ def entityPickerRun():
     if result == QtWidgets.QDialog.Rejected:
         return
 
-    selection = ent.getSelection()
-    if selection:
-        entityObject = selection[0].dataObject
-        jobObject = ent.entityViewer.currentJob()
+    jobObject = ent.entityViewer.currentJob()
+    entityObject = ent.getSelection()
 
-        if jobObject:
-            os.environ['SHOW'] = jobObject.get("label")
-        if entityObject:
-            os.environ['SHOT'] = entityObject.get("label")
+    if entityObject and len(entityObject) > 0:
+        entityObject = entityObject[0]
+    else:
+        entityObject = None
 
-        if jobObject and entityObject:
-            from cometmaya.scripts import configure_scene_for_entity
-            configure_scene_for_entity(jobObject, entityObject)
+    if jobObject:
+        os.environ['SHOW'] = jobObject.get("label")
+    if entityObject:
+        os.environ['SHOT'] = entityObject.publishName()
+
+    if jobObject and entityObject:
+        from cometmaya.scripts import configure_scene_for_entity
+        configure_scene_for_entity(jobObject, entityObject)
