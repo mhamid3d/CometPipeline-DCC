@@ -9,6 +9,8 @@ import maya.OpenMayaUI as omui
 import maya.cmds as mc
 import os
 
+print("Comet Pipeline Startup -------------------")
+
 # Shelf script imports
 from cometmaya.shelf_scripts.entity_picker import entityPickerRun
 from cometmaya.shelf_scripts.publish_model import run_publish_model
