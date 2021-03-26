@@ -51,22 +51,4 @@ class CometShelf(BaseShelf):
 
         self.addButton(label='Set Entity', icon=fullIconPath(icon_paths.ICON_SHOT_LRG), command='entityPickerRun()')
         self.addSeparator()
-
-        # disciplineButton = QtWidgets.QToolButton()
-        # disciplineButton.setText("Lighting")
-        # disciplineButton.setIcon(QtGui.QIcon(icon_paths.ICON_COMETPIPE_LRG))
-        # disciplineButton.setFixedSize(64, 32)
-        # layout.addWidget(disciplineButton)
-
-        mc.shelfButton(width=64, height=37, image=fullIconPath(icon_paths.ICON_COMETPIPE_LRG), command='', label='Discipline', olb=self.labelBackground, olc=self.labelColor, parent=self.mainShelf)
-        p = mc.popupMenu(b=1)
-
-        mc.menuItem(p=p, command="", label="Comet", c="", i="")
-        mc.menuItem(p=p, command="", label="Anim", c="", i="")
-        mc.menuItem(p=p, command="", label="Layout", c="", i="")
-        mc.menuItem(p=p, command="", label="Modeling", c="", i="")
-        mc.menuItem(p=p, command="", label="Groom", c="", i="")
-        mc.menuItem(p=p, command="", label="All", c="", i="")
-
-        self.addSeparator()
         self.addButton(label='Publish Model', icon=fullIconPath(icon_paths.ICON_MODEL_PUBLISH_LRG), command='run_publish_model()')
