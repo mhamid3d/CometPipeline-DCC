@@ -9,7 +9,7 @@ presets:
     - 0.607843
     - 0.2
     - 0.156862
-  carbon_fiber:
+  carbonFiber:
     color:
     - 0.086274
     - 0.117647
@@ -24,7 +24,7 @@ presets:
     - 0.607843
     - 0.564142
     - 0.512495
-  concrete_rough:
+  concreteRough:
     color:
     - 0.72549
     - 0.627022
@@ -39,17 +39,17 @@ presets:
     - 0.897428
     - 0.897428
     - 0.78204
-  fabric_rough:
+  fabricRough:
     color:
     - 0.509803
     - 0.439215
     - 0.505882
-  fabric_soft:
+  fabricSoft:
     color:
     - 0.093428
     - 0.254901
     - 0.084967
-  fabric_synthetic:
+  fabricSynthetic:
     color:
     - 0.199923
     - 0.509803
@@ -94,72 +94,72 @@ presets:
     - 0.046136
     - 0.196078
     - 0.046136
-  metal_aluminum:
+  metalAluminum:
     color:
     - 0.408499
     - 0.453879
     - 0.470084
-  metal_brass:
+  metalBrass:
     color:
     - 0.705882
     - 0.611078
     - 0.17993
-  metal_bronze:
+  metalBronze:
     color:
     - 0.72549
     - 0.536794
     - 0.256055
-  metal_chrome:
+  metalChrome:
     color:
     - 0.188235
     - 0.188235
     - 0.188235
-  metal_copper:
+  metalCopper:
     color:
     - 0.470588
     - 0.233728
     - 0.193771
-  metal_galvanized:
+  metalGalvanized:
     color:
     - 0.392156
     - 0.392156
     - 0.470588
-  metal_gold:
+  metalGold:
     color:
     - 1.0
     - 0.805803
     - 0.121568
-  metal_gun:
+  metalGun:
     color:
     - 0.062745
     - 0.062745
     - 0.062745
-  metal_iron:
+  metalIron:
     color:
     - 0.380392
     - 0.360784
     - 0.341176
-  metal_lead:
+  metalLead:
     color:
     - 0.159029
     - 0.205767
     - 0.247867
-  metal_painted:
+  metalPainted:
     color:
     - 1.0
     - 0.598035
     - 0.0
-  metal_plate:
+  metalPlate:
     color:
     - 0.5
     - 0.5
     - 0.5
-  metal_rusted:
+  metalRusted:
     color:
     - 0.313725
     - 0.132982
     - 0.073817
-  metal_steel:
+  metalSteel:
     color:
     - 0.282352
     - 0.298039
@@ -179,12 +179,12 @@ presets:
     - 0.0
     - 0.227796
     - 1.0
-  plastic_glossy:
+  plasticGlossy:
     color:
     - 0.764705
     - 0.288242
     - 0.209919
-  plastic_rough:
+  plasticRough:
     color:
     - 0.09828
     - 0.067281
@@ -199,7 +199,7 @@ presets:
     - 0.490196
     - 0.449834
     - 0.40369
-  rock_rough:
+  rockRough:
     color:
     - 0.392156
     - 0.279421
@@ -209,7 +209,7 @@ presets:
     - 0.12549
     - 0.12549
     - 0.12549
-  rubber_dry:
+  rubberDry:
     color:
     - 0.393163
     - 0.393163
@@ -219,7 +219,7 @@ presets:
     - 0.823529
     - 0.6599
     - 0.516724
-  skin_rough:
+  skinRough:
     color:
     - 0.568627
     - 0.36139
@@ -244,23 +244,28 @@ presets:
     - 0.0
     - 0.0
     - 0.0
-  wood_bark:
+  woodBark:
     color:
     - 0.264957
     - 0.175692
     - 0.140291
-  wood_painted:
+  woodPainted:
     color:
     - 0.640999
     - 0.226913
     - 0.343457
-  wood_raw:
+  woodRaw:
     color:
     - 0.764705
     - 0.664744
     - 0.464821
-  wood_varnished:
+  woodVarnished:
     color:
     - 0.5812
     - 0.490806
     - 0.387502
+  zenith:
+    color:
+    - 1.0
+    - 0.3765
+    - 0.7608

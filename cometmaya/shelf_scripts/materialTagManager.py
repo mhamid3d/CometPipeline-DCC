@@ -11,6 +11,7 @@ try:
 except:
     MATCONFIG_FILE = "/home/mhamid/_dev/CometPipeline-DCC/cometmaya/shelf_scripts/materialTagConfig.yaml"
 
+
 def createMat(matName):
     mat_name = "{}".format(matName)
     shd_name = "{}_SG".format(matName)
@@ -19,21 +20,6 @@ def createMat(matName):
     mc.connectAttr('{}.outColor'.format(mat_name), '{}.surfaceShader'.format(shd_name))
 
     return shdSG
-
-
-def tagToMaterial():
-    sel = mc.ls(sl=True)
-    materialTagDict = defaultdict(list)
-
-    for shape in sel:
-        assert (str(shape).endswith("geoShape"))
-        materialTag = str(shape).split("_")[-2]
-        materialTagDict[materialTag].append(shape)
-
-    for k, v in materialTagDict.items():
-        material = createMat(k)
-        for obj in v:
-            mc.sets(obj, e=True, forceElement=material)
 
 
 class MaterialTagManager(QtWidgets.QDialog):
@@ -143,8 +129,29 @@ class MaterialTagManager(QtWidgets.QDialog):
         self.assignToSelButton.clicked.connect(self.handle_assignToSelection)
         self.addTagButton.clicked.connect(self.handle_addTag)
         self.deleteTagButton.clicked.connect(self.handle_deleteTag)
+        self.changeColorButton.clicked.connect(self.handle_changeColor)
+        self.searchBar.textChanged.connect(self.handle_searchChanged)
+        self.generateMaterialsButton.clicked.connect(self.handle_generateMaterials)
 
         self.populateTree()
+
+    def handle_searchChanged(self):
+        currentText = self.searchBar.text()
+        state = self.onlySceneMatsCheck.isChecked()
+
+        allItems = [self.mainTree.topLevelItem(i) for i in range(self.mainTree.topLevelItemCount())]
+        for item in allItems:
+            for c in range(item.childCount()):
+                allItems.append(item.child(c))
+
+        for item in allItems:
+            item.setHidden(True)
+            if state and not item.parent() and item.childCount() == 0:
+                continue
+            if currentText in item.text(0):
+                item.setHidden(False)
+                if item.parent():
+                    item.parent().setHidden(False)
 
     def handle_assignToSelection(self):
         currentItem = self.mainTree.currentItem()
@@ -179,7 +186,6 @@ class MaterialTagManager(QtWidgets.QDialog):
 
     def handle_onlySceneMatsChanged(self):
         state = self.onlySceneMatsCheck.isChecked()
-        # presetData = self.getMatPresetData()
 
         for i in range(self.mainTree.topLevelItemCount()):
             item = self.mainTree.topLevelItem(i)
@@ -243,7 +249,9 @@ class MaterialTagManager(QtWidgets.QDialog):
             return
 
         materialTag = materialTagLE.text()
-        displayColor = colorPushButton.color
+        displayColor = list(colorPushButton.color)
+        displayColor.pop()
+        displayColor = [round(x, 4) for x in displayColor]
 
         with open(MATCONFIG_FILE) as f:
             data = yaml.load(f, Loader=yaml.FullLoader)
@@ -289,6 +297,69 @@ class MaterialTagManager(QtWidgets.QDialog):
                     mc.setAttr(str(child.text(0)) + ".materialTag", "", type="string")
 
         self.populateTree()
+
+    def handle_changeColor(self):
+        currentItem = self.mainTree.currentItem()
+        if not currentItem:
+            return
+        elif currentItem.text(0) == "Unassigned Objects":
+            return
+        elif currentItem.parent():
+            return
+        else:
+            materialTag = currentItem.text(0)
+
+        colorDialog = QtWidgets.QColorDialog()
+        color = [int(x*255) for x in self.getMatPresetData()[materialTag]['color']]
+        colorDialog.setCurrentColor(QtGui.QColor(color[0], color[1], color[2]))
+        result = colorDialog.exec_()
+
+        if not result:
+            return
+
+        newColor = list(colorDialog.currentColor().getRgbF())
+        newColor.pop()
+        newColor = [round(x, 4) for x in newColor]
+
+        with open(MATCONFIG_FILE) as f:
+            data = yaml.load(f, Loader=yaml.FullLoader)
+
+        with open(MATCONFIG_FILE, "w") as f:
+            data['presets'][materialTag]['color'] = newColor
+            yaml.dump(data, f)
+
+        self.populateTree()
+
+    def handle_generateMaterials(self):
+        allShapes = mc.ls(dag=True, type=['mesh', 'nurbsSurface'])
+
+        materialTagDict = defaultdict(list)
+        for shape in allShapes:
+            if mc.attributeQuery("materialTag", node=shape, exists=True) and str(mc.getAttr(shape + ".materialTag")):
+                materialTag = str(mc.getAttr(shape + ".materialTag"))
+                materialTagDict[materialTag].append(shape)
+            else:
+                materialTagDict[UNDEFINED_STRING].append(shape)
+
+        for mTag, shapes in materialTagDict.items():
+            if mTag == UNDEFINED_STRING:
+                material = "initialShadingGroup"
+            else:
+                if mc.ls(mTag + "_SG", type=['shadingEngine']):
+                    material = mTag + "_SG"
+                else:
+                    material = createMat(mTag)
+
+                try:
+                    color = self.getMatPresetData()[mTag]['color']
+                except KeyError:
+                    color = [0.0, 1.0, 0.0]
+
+                mat = mc.listConnections(material + ".surfaceShader")[0]
+                mc.setAttr(mat + ".color", *color, type="double3")
+
+            for shape in shapes:
+                mc.sets(shape, e=True, forceElement=material)
 
     def getMatPresetData(self):
         with open(MATCONFIG_FILE) as f:
@@ -343,6 +414,7 @@ class MaterialTagManager(QtWidgets.QDialog):
                 self.mainTree.setItemWidget(item, 1, colorWidget)
 
         self.mainTree.setColumnWidth(0, 300)
+        self.handle_searchChanged()
 
 
 win = MaterialTagManager()
