@@ -14,6 +14,7 @@ print("Comet Pipeline Startup -------------------")
 # Shelf script imports
 from cometmaya.shelf_scripts.entity_picker import entityPickerRun
 from cometmaya.shelf_scripts.publish_model import run_publish_model
+from cometmaya.shelf_scripts.materialTagManager import run_material_manager
 
 
 mc.evalDeferred('initialize_maya()')
@@ -51,4 +52,5 @@ class CometShelf(BaseShelf):
 
         self.addButton(label='Set Entity', icon=fullIconPath(icon_paths.ICON_SHOT_LRG), command='entityPickerRun()')
         self.addSeparator()
+        self.addButton(label='Material Tag Manager', icon=fullIconPath(icon_paths.ICON_SHADER_LRG), command='run_material_manager()')
         self.addButton(label='Publish Model', icon=fullIconPath(icon_paths.ICON_MODEL_PUBLISH_LRG), command='run_publish_model()')

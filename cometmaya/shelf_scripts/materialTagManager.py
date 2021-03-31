@@ -6,10 +6,7 @@ import os
 import yaml
 
 UNDEFINED_STRING = "META_UNDEFINED"
-try:
-    MATCONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "materialTagConfig.yaml"))
-except:
-    MATCONFIG_FILE = "/home/mhamid/_dev/CometPipeline-DCC/cometmaya/shelf_scripts/materialTagConfig.yaml"
+MATCONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "materialTagConfig.yaml"))
 
 
 def createMat(matName):
@@ -23,8 +20,8 @@ def createMat(matName):
 
 
 class MaterialTagManager(QtWidgets.QDialog):
-    def __init__(self):
-        super(MaterialTagManager, self).__init__()
+    def __init__(self, parent=None):
+        super(MaterialTagManager, self).__init__(parent=parent)
         self.resize(600, 700)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
@@ -331,6 +328,13 @@ class MaterialTagManager(QtWidgets.QDialog):
         self.populateTree()
 
     def handle_generateMaterials(self):
+
+        for shadingEngine in mc.ls(type=['shadingEngine']):
+            if shadingEngine.endswith("_SG"):
+                material = mc.listConnections(shadingEngine + ".surfaceShader")[0]
+                mc.delete(material)
+                mc.delete(shadingEngine)
+
         allShapes = mc.ls(dag=True, type=['mesh', 'nurbsSurface'])
 
         materialTagDict = defaultdict(list)
@@ -405,17 +409,44 @@ class MaterialTagManager(QtWidgets.QDialog):
                 if self.onlySceneMatsCheck.isChecked():
                     item.setHidden(True)
 
+        tagsNotInConfig = []
+
         for i in range(self.mainTree.topLevelItemCount()):
             item = self.mainTree.topLevelItem(i)
+            if item.text(0) == "Unassigned Objects":
+                continue
             if item.text(0) in materialData:
                 colorWidget = QtWidgets.QFrame()
                 color = [int(x*255) for x in materialData[item.text(0)]['color']]
                 colorWidget.setStyleSheet("background: rgb(%s, %s, %s)" % (color[0], color[1], color[2]))
                 self.mainTree.setItemWidget(item, 1, colorWidget)
+            else:
+                item.setIcon(0, QtGui.QIcon(icon_paths.ICON_CAUTION_LRG))
+                tagsNotInConfig.append(item.text(0))
+
+        if len(tagsNotInConfig) > 0:
+            msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, "Tags Not Stored In Cofig", "",
+                                           buttons=QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No)
+            msgBox.setText("The following tags are not in the config file: \n\n{}. \n\n Do you want to add them? (HIGHLY RECCOMENDED OR ELSE THIS TOOL WILL LOSE SOME FUNCTIONALITY".format(
+                "\n".join(["- {}".format(x) for x in tagsNotInConfig])
+            ))
+            result = msgBox.exec_()
+            if result == QtWidgets.QMessageBox.Yes:
+                for tag in tagsNotInConfig:
+                    with open(MATCONFIG_FILE) as f:
+                        data = yaml.load(f, Loader=yaml.FullLoader)
+
+                    with open(MATCONFIG_FILE, "w") as f:
+                        data['presets'][tag] = {'color': [1.0, 1.0, 1.0]}
+                        yaml.dump(data, f)
+
+                self.populateTree()
 
         self.mainTree.setColumnWidth(0, 300)
         self.handle_searchChanged()
 
 
-win = MaterialTagManager()
-win.show()
+def run_material_manager():
+    from cometmaya.scripts import util as mayautil
+    win = MaterialTagManager(parent=mayautil.getMayaWindow())
+    win.show()
