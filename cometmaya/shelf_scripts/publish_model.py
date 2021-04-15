@@ -7,6 +7,9 @@ import os
 
 
 def publish_model(**kwargs):
+
+    publishGroup = mc.ls(sl=True)[0]
+
     package = kwargs.get("packageObject")
     version = kwargs.get("versionObject")
     entity = kwargs.get("entityObject")
@@ -34,6 +37,8 @@ def publish_model(**kwargs):
     alembicContentObject.save()
     mayaBinaryContentObject.save()
 
+    mc.select(publishGroup)
+
     abcExportCommand = "-frameRange {currentFrame} {currentFrame} -uvWrite -worldSpace -writeUVSets -dataFormat ogawa -root {rootObject} -file {filePath}".format(
         rootObject=str(mc.ls(sl=True)[0]),
         filePath=alembicContentObject.get("path"),
@@ -51,24 +56,71 @@ class ModelPublishValidator(uvp.ValidationDialog):
         super(ModelPublishValidator, self).__init__(*args, **kwargs)
 
     def validation_001(self):
+        errorMsg = ""
+        result = True
+        sel = mc.ls(sl=True, dag=True, type=['mesh', 'nurbsSurface'])
+
+        affectedItems = []
+
+        for shape in sel:
+            if not str(shape).endswith("_geoShape"):
+                affectedItems.append(shape)
+
+        if affectedItems:
+            result = False
+            errorMsg = "The following geometry do not satisfy the validation:\n{}".format("\n".join(affectedItems))
+
+        return result, errorMsg
+
+    def validation_002(self):
+        result = True
+        errorMsg = ""
+        sel = mc.ls(sl=True, dag=True, type=['mesh', 'nurbsSurface'])
+
+        affectedItems = []
+
+        for shape in sel:
+            if not mc.attributeQuery("materialTag", node=shape, exists=True):
+                affectedItems.append(shape)
+
+        if affectedItems:
+            result = False
+            errorMsg = "The following geometry do not satisfy the validation:\n{}".format("\n".join(affectedItems))
+
+        return result, errorMsg
+
+    def validation_003(self):
+        result = True
+        errorMsg = ""
+        sel = mc.ls(sl=True, dag=True, type=['mesh'])
+
+        affectedItems = []
+
+        for shape in sel:
+            u, v = mc.polyEvaluate(shape, b2=True)
+            un, ux = u
+            vn, vx = v
+            if (float(un), float(ux), float(vn), float(vx)) == (0.0, 0.0, 0.0, 0.0):
+                affectedItems.append(shape)
+
+        if affectedItems:
+            result = False
+            errorMsg = "The following geometry do not satisfy the validation:\n{}".format("\n".join(affectedItems))
+
+        return result, errorMsg
+
+    def fixer_001(self):
         sel = mc.ls(sl=True, dag=True, type=['mesh', 'nurbsSurface'])
 
         for shape in sel:
             if not str(shape).endswith("_geoShape"):
-                return False
+                tform = mc.listRelatives(shape, p=True)[0]
+                if str(tform).endswith("_geo"):
+                    mc.rename(shape, "{}Shape".format(str(tform)))
+                else:
+                    mc.rename(tform, "{}_geo".format(tform))
 
-        return True
-
-    def validation_002(self):
-        sel = mc.ls(sl=True, dag=True, type=['mesh', 'nurbsSurface'])
-
-        for shape in sel:
-            if not mc.attributeQuery("materialTag", node=shape, exists=True):
-                return False
-
-        return True
-
-    def validation_003(self):
+    def fixer_003(self):
         sel = mc.ls(sl=True, dag=True, type=['mesh'])
 
         for shape in sel:
@@ -76,40 +128,29 @@ class ModelPublishValidator(uvp.ValidationDialog):
             un, ux = u
             vn, vx = v
             if (float(un), float(ux), float(vn), float(vx)) == (0.0, 0.0, 0.0, 0.0):
-                return False
-
-        return True
+                faceMax = mc.polyEvaluate(shape, face=True) - 1
+                mc.polyProjection("{}.f[0:{}]".format(shape, faceMax), ch=True, ibd=True, md="x")
 
     def setupValidators(self):
 
-        self.validatorMap = {
-            'Each shape geometry ends withs with "_geo"': {
-                'result': False,
-                'treeItem': None,
-                'errorMsg': None,
-                'description': None,
-                'validator': self.validation_001
-            },
-            'Each shape has the "materialTag" attribute': {
-                'result': False,
-                'treeItem': None,
-                'errorMsg': None,
-                'description': None,
-                'validator': self.validation_002
-            },
-            'Each shape has proper UVs': {
-                'result': False,
-                'treeItem': None,
-                'errorMsg': None,
-                'description': None,
-                'validator': self.validation_003
-            }
-        }
+        self.installValidator(
+            name='Each shape geometry ends withs with "_geo"',
+            description='Rename each geo so that it ends with "_geo", the shape should also end with "_geoShape"',
+            validator=self.validation_001,
+            fixer=self.fixer_001
+        )
+        self.installValidator(
+            name='Each shape has the "materialTag" attribute',
+            description='Each shape should have an attribute titled "materialTag". If this returns invalid you should open the Material Tag Manager to automate the process on the entire model.',
+            validator=self.validation_002
+        )
+        self.installValidator(
+            name='Each shape has proper UVs',
+            description="Each shape is required to have valid UV's, even if they are just a simple planar projection.",
+            validator=self.validation_003,
+            fixer=self.fixer_003
+        )
 
-        for validationTask, payload in self.validatorMap.items():
-            item = QtWidgets.QTreeWidgetItem(self.validationTree)
-            item.setText(0, validationTask)
-            self.validatorMap[validationTask]['treeItem'] = item
 
 def run_publish_model():
     sel = mc.ls(sl=True)
