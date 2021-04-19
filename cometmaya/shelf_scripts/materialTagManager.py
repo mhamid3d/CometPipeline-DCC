@@ -7,6 +7,7 @@ import yaml
 
 UNDEFINED_STRING = "META_UNDEFINED"
 MATCONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "materialTagConfig.yaml"))
+MTAG_ATTR_NAME = "CMT_materialTag"
 
 
 def createMat(matName):
@@ -165,10 +166,10 @@ class MaterialTagManager(QtWidgets.QDialog):
         if not mayaSel:
             return
         for shape in mayaSel:
-            if not mc.attributeQuery("materialTag", node=shape, exists=True):
-                mc.addAttr(shape, ln="materialTag", dt="string")
+            if not mc.attributeQuery(MTAG_ATTR_NAME, node=shape, exists=True):
+                mc.addAttr(shape, ln=MTAG_ATTR_NAME, dt="string")
 
-            mc.setAttr(shape + ".materialTag", materialTag, type="string")
+            mc.setAttr(shape + ".{}".format(MTAG_ATTR_NAME), materialTag, type="string")
 
         self.populateTree()
 
@@ -290,8 +291,8 @@ class MaterialTagManager(QtWidgets.QDialog):
         if currentItem.childCount() > 0:
             for c in range(currentItem.childCount()):
                 child = currentItem.child(c)
-                if mc.getAttr(str(child.text(0)) + ".materialTag") == materialTag:
-                    mc.setAttr(str(child.text(0)) + ".materialTag", "", type="string")
+                if mc.getAttr(str(child.text(0)) + ".{}".format(MTAG_ATTR_NAME)) == materialTag:
+                    mc.setAttr(str(child.text(0)) + ".{}".format(MTAG_ATTR_NAME), "", type="string")
 
         self.populateTree()
 
@@ -339,8 +340,8 @@ class MaterialTagManager(QtWidgets.QDialog):
 
         materialTagDict = defaultdict(list)
         for shape in allShapes:
-            if mc.attributeQuery("materialTag", node=shape, exists=True) and str(mc.getAttr(shape + ".materialTag")):
-                materialTag = str(mc.getAttr(shape + ".materialTag"))
+            if mc.attributeQuery(MTAG_ATTR_NAME, node=shape, exists=True) and str(mc.getAttr(shape + ".{}".format(MTAG_ATTR_NAME))):
+                materialTag = str(mc.getAttr(shape + ".{}".format(MTAG_ATTR_NAME)))
                 materialTagDict[materialTag].append(shape)
             else:
                 materialTagDict[UNDEFINED_STRING].append(shape)
@@ -382,9 +383,9 @@ class MaterialTagManager(QtWidgets.QDialog):
 
         materialTagDict = defaultdict(list)
         for shape in allShapes:
-            attrExists = mc.attributeQuery("materialTag", node=shape, exists=True)
-            if attrExists and mc.getAttr(shape + ".materialTag"):
-                materialTagDict[mc.getAttr(shape + ".materialTag")].append(shape)
+            attrExists = mc.attributeQuery(MTAG_ATTR_NAME, node=shape, exists=True)
+            if attrExists and mc.getAttr(shape + ".{}".format(MTAG_ATTR_NAME)):
+                materialTagDict[mc.getAttr(shape + ".{}".format(MTAG_ATTR_NAME))].append(shape)
             else:
                 materialTagDict[UNDEFINED_STRING].append(shape)
 

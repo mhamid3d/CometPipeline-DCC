@@ -1,6 +1,7 @@
 from cometpublish.ui import ui_version_publisher as uvp
+from cometqt.widgets.ui_screengrab import ScreenShotTool
 from mongorm import util as mgutil
-from qtpy import QtWidgets, QtGui, QtCore
+import shutil
 import mongorm
 import maya.cmds as mc
 import os
@@ -47,6 +48,18 @@ def publish_model(**kwargs):
 
     mc.AbcExport(j=abcExportCommand)
     mc.file(mayaBinaryContentObject.get("path"), type="mayaBinary", ea=True)
+
+    mc.select(d=True)
+    screenShotTool = ScreenShotTool(format='png', parent=None)
+    screenShotTool.squareAspectRatio.setDisabled(True)
+    result = screenShotTool.exec_()
+
+    src = screenShotTool.outputPath
+    dest = "{}/_thumbnail/{}.png".format(entity.get("path"), version.get("label"))
+    shutil.move(src, dest)
+
+    version.thumbnail = dest
+    version.save()
 
     return True
 
@@ -140,8 +153,8 @@ class ModelPublishValidator(uvp.ValidationDialog):
             fixer=self.fixer_001
         )
         self.installValidator(
-            name='Each shape has the "materialTag" attribute',
-            description='Each shape should have an attribute titled "materialTag". If this returns invalid you should open the Material Tag Manager to automate the process on the entire model.',
+            name='Each shape has the "CMT_materialTag" attribute',
+            description='Each shape should have an attribute titled "CMT_materialTag". If this returns invalid you should open the Material Tag Manager to automate the process on the entire model.',
             validator=self.validation_002
         )
         self.installValidator(
