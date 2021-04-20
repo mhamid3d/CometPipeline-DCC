@@ -40,7 +40,7 @@ def publish_model(**kwargs):
 
     mc.select(publishGroup)
 
-    abcExportCommand = "-frameRange {currentFrame} {currentFrame} -uvWrite -worldSpace -writeUVSets -dataFormat ogawa -root {rootObject} -file {filePath}".format(
+    abcExportCommand = "-frameRange {currentFrame} {currentFrame} -attrPrefix CMT_ -uvWrite -worldSpace -writeUVSets -dataFormat ogawa -root {rootObject} -file {filePath}".format(
         rootObject=str(mc.ls(sl=True)[0]),
         filePath=alembicContentObject.get("path"),
         currentFrame=int(mc.currentTime(query=True))
@@ -50,16 +50,17 @@ def publish_model(**kwargs):
     mc.file(mayaBinaryContentObject.get("path"), type="mayaBinary", ea=True)
 
     mc.select(d=True)
-    screenShotTool = ScreenShotTool(format='png', parent=None)
+    screenShotTool = ScreenShotTool(format='png', parent=None, versionObject=version)
     screenShotTool.squareAspectRatio.setDisabled(True)
     result = screenShotTool.exec_()
 
     src = screenShotTool.outputPath
-    dest = "{}/_thumbnail/{}.png".format(entity.get("path"), version.get("label"))
-    shutil.move(src, dest)
+    if src:
+        dest = "{}/_thumbnail/{}.png".format(entity.get("path"), version.get("label"))
+        shutil.move(src, dest)
 
-    version.thumbnail = dest
-    version.save()
+        version.thumbnail = dest
+        version.save()
 
     return True
 
@@ -122,6 +123,37 @@ class ModelPublishValidator(uvp.ValidationDialog):
 
         return result, errorMsg
 
+    def validation_004(self):
+        result = True
+        errorMsg = ""
+        sel = mc.ls(sl=True, dag=True, type=['transform'])
+
+        affectedItems = []
+
+        for tform in sel:
+            if mc.getAttr(tform + ".translateX") != 0 \
+                    or mc.getAttr(tform + ".translateY") != 0 \
+                    or mc.getAttr(tform + ".translateZ") != 0 \
+                    or mc.getAttr(tform + ".rotateX") != 0 \
+                    or mc.getAttr(tform + ".rotateY") != 0 \
+                    or mc.getAttr(tform + ".rotateZ") != 0 \
+                    or mc.getAttr(tform + ".scaleX") != 1 \
+                    or mc.getAttr(tform + ".scaleY") != 1 \
+                    or mc.getAttr(tform + ".scaleZ") != 1 \
+                    or mc.getAttr(tform + ".shearXY") != 0 \
+                    or mc.getAttr(tform + ".shearXZ") != 0 \
+                    or mc.getAttr(tform + ".shearYZ") != 0 \
+                    or mc.getAttr(tform + ".rotateAxisX") != 0 \
+                    or mc.getAttr(tform + ".rotateAxisY") != 0 \
+                    or mc.getAttr(tform + ".rotateAxisZ") != 0:
+                affectedItems.append(tform)
+
+        if affectedItems:
+            result = False
+            errorMsg = "The following geometry do not satisfy the validation:\n{}".format("\n".join(affectedItems))
+
+        return result, errorMsg
+
     def fixer_001(self):
         sel = mc.ls(sl=True, dag=True, type=['mesh', 'nurbsSurface'])
 
@@ -144,6 +176,27 @@ class ModelPublishValidator(uvp.ValidationDialog):
                 faceMax = mc.polyEvaluate(shape, face=True) - 1
                 mc.polyProjection("{}.f[0:{}]".format(shape, faceMax), ch=True, ibd=True, md="x")
 
+    def fixer_004(self):
+        sel = mc.ls(sl=True, dag=True, type=['transform'])
+
+        for tform in sel:
+            if mc.getAttr(tform + ".translateX") != 0 \
+                    or mc.getAttr(tform + ".translateY") != 0 \
+                    or mc.getAttr(tform + ".translateZ") != 0 \
+                    or mc.getAttr(tform + ".rotateX") != 0 \
+                    or mc.getAttr(tform + ".rotateY") != 0 \
+                    or mc.getAttr(tform + ".rotateZ") != 0 \
+                    or mc.getAttr(tform + ".scaleX") != 1 \
+                    or mc.getAttr(tform + ".scaleY") != 1 \
+                    or mc.getAttr(tform + ".scaleZ") != 1 \
+                    or mc.getAttr(tform + ".shearXY") != 0 \
+                    or mc.getAttr(tform + ".shearXZ") != 0 \
+                    or mc.getAttr(tform + ".shearYZ") != 0 \
+                    or mc.getAttr(tform + ".rotateAxisX") != 0 \
+                    or mc.getAttr(tform + ".rotateAxisY") != 0 \
+                    or mc.getAttr(tform + ".rotateAxisZ") != 0:
+                mc.makeIdentity(apply=True, t=True, r=True, s=True, n=False, pn=True)
+
     def setupValidators(self):
 
         self.installValidator(
@@ -162,6 +215,13 @@ class ModelPublishValidator(uvp.ValidationDialog):
             description="Each shape is required to have valid UV's, even if they are just a simple planar projection.",
             validator=self.validation_003,
             fixer=self.fixer_003
+        )
+
+        self.installValidator(
+            name='Each transform is frozen',
+            description='Every transform and child transform must have their transforms, rotations, and scales frozen.',
+            validator=self.validation_004,
+            fixer=self.fixer_004
         )
 
 
