@@ -17,13 +17,22 @@ def publish_model(**kwargs):
 
     handler = mongorm.getHandler()
 
-    alembicContentObject = handler['content'].create(
-        label="alembic",
+    cacheContentObject = handler['content'].create(
+        label="cache",
         created_by=mgutil.getCurrentUser().getUuid(),
         parent_uuid=version.getUuid(),
         job=version.get("job"),
-        path=os.path.abspath(os.path.join(version.get("path"), "{}.abc".format(version.get("label")))),
+        path=os.path.abspath(os.path.join(version.get("path"), "cache.abc")),
         format="abc"
+    )
+
+    usdContentObject = handler['content'].create(
+        label="geom",
+        created_by=mgutil.getCurrentUser().getUuid(),
+        parent_uuid=version.getUuid(),
+        job=version.get("job"),
+        path=os.path.abspath(os.path.join(version.get("path"), "geom.usd")),
+        format="usd"
     )
 
     mayaBinaryContentObject = handler['content'].create(
@@ -31,22 +40,36 @@ def publish_model(**kwargs):
         created_by=mgutil.getCurrentUser().getUuid(),
         parent_uuid=version.getUuid(),
         job=version.get("job"),
-        path=os.path.abspath(os.path.join(version.get("path"), "{}.mb".format(version.get("label")))),
+        path=os.path.abspath(os.path.join(version.get("path"), "main.mb")),
         format="mb"
     )
 
-    alembicContentObject.save()
+    cacheContentObject.save()
+    usdContentObject.save()
     mayaBinaryContentObject.save()
 
     mc.select(publishGroup)
 
     abcExportCommand = "-frameRange {currentFrame} {currentFrame} -attrPrefix CMT_ -uvWrite -worldSpace -writeUVSets -dataFormat ogawa -root {rootObject} -file {filePath}".format(
         rootObject=str(mc.ls(sl=True)[0]),
-        filePath=alembicContentObject.get("path"),
+        filePath=cacheContentObject.get("path"),
         currentFrame=int(mc.currentTime(query=True))
     )
-
     mc.AbcExport(j=abcExportCommand)
+    mc.mayaUSDExport(
+        file='{filePath}'.format(
+            filePath=usdContentObject.get("path")
+        ),
+        chaser=['alembic'],
+        chaserArgs=[
+            ('alembic', 'primvarprefix', 'CMT_=CMT_')
+        ],
+        shadingMode='none',
+        selection=True,
+        kind='component',
+        exportDisplayColor=True,
+        defaultMeshScheme='catmullClark'
+    )
     mc.file(mayaBinaryContentObject.get("path"), type="mayaBinary", ea=True)
 
     mc.select(d=True)

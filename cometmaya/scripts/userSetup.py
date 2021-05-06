@@ -4,7 +4,6 @@ from pipeicon.util import fullIconPath
 from maya import mel
 from shiboken2 import wrapInstance
 from qtpy import QtWidgets, QtGui
-import pymel.core as pmc
 import maya.OpenMayaUI as omui
 import maya.cmds as mc
 import os
@@ -44,11 +43,11 @@ class CometShelf(BaseShelf):
         BaseShelf.__init__(self, name)
 
     def build(self):
-
-        shelfName = pmc.MelGlobals()['gShelfTopLevel'] + "|{}".format(self.name)
-        swigObject = omui.MQtUtil.findLayout(shelfName)
-        qtObject = wrapInstance(swigObject, QtWidgets.QWidget)
-        layout = qtObject.layout()
+        # shelfName = pmc.MelGlobals()['gShelfTopLevel'] + "|{}".format(self.name)
+        # shelfName = mc.eval('$tmpVar=$gShelfTopLevel')
+        # swigObject = omui.MQtUtil.findLayout(shelfName)
+        # qtObject = wrapInstance(swigObject, QtWidgets.QWidget)
+        # layout = qtObject.layout()
 
         self.addButton(label='Set Entity', icon=fullIconPath(icon_paths.ICON_SHOT_LRG), command='entityPickerRun()')
         self.addSeparator()
