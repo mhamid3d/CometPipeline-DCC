@@ -254,7 +254,7 @@ def run_publish_model():
         raise RuntimeError("Please select 1 valid group object to publish")
 
     win = uvp.VersionPublisher(postProcess=publish_model, validationDialog=ModelPublishValidator)
-    win.setCurrentType("MODEL")
+    win.setCurrentType("model")
     win.setFixedType(True)
     win.setWindowTitle("Publish Model")
     win.show()

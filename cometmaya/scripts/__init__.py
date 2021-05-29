@@ -1,11 +1,12 @@
+import os
 import maya.cmds as mc
 
 
 def configure_scene_for_entity(jobObject, entityObject):
     inValue = 1001
     outValue = 1101
-    resXValue = 2560
-    resYValue = 1440
+    resXValue = 1920
+    resYValue = 1080
     pixelAspectValue = 1.0
 
     if entityObject:
